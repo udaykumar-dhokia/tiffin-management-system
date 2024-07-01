@@ -24,6 +24,7 @@ class _SignUpState extends State<SignUp> {
   TextEditingController _email = TextEditingController();
   TextEditingController _mobile = TextEditingController();
   TextEditingController _password = TextEditingController();
+  TextEditingController _upi = TextEditingController();
   bool _showPassword = true;
   bool _isLoading = false;
   bool _isEmailTaken = false;
@@ -57,17 +58,17 @@ class _SignUpState extends State<SignUp> {
             .doc(email)
             .set(data);
 
-        await FirebaseFirestore.instance
-            .collection("providers")
-            .doc(email)
-            .collection("Customers")
-            .add({});
+        // await FirebaseFirestore.instance
+        //     .collection("providers")
+        //     .doc(email)
+        //     .collection("Customers")
+        //     .add();
 
-        await FirebaseFirestore.instance
-            .collection("providers")
-            .doc(email)
-            .collection("Tiffins")
-            .add({});
+        // await FirebaseFirestore.instance
+        //     .collection("providers")
+        //     .doc(email)
+        //     .collection("Tiffins")
+        //     .add();
 
         setState(() {
           _isLoading = false;
@@ -269,6 +270,16 @@ class _SignUpState extends State<SignUp> {
                                 _password,
                               ),
                               const SizedBox(
+                                height: 10,
+                              ),
+                              _textField(
+                                'UPI',
+                                TextInputType.text,
+                                _showPassword,
+                                () {},
+                                _upi,
+                              ),
+                              const SizedBox(
                                 height: 20,
                               ),
                               GestureDetector(
@@ -277,7 +288,8 @@ class _SignUpState extends State<SignUp> {
                                       _owner.text.isEmpty ||
                                       _email.text.isEmpty ||
                                       _mobile.text.isEmpty ||
-                                      _password.text.isEmpty) {
+                                      _password.text.isEmpty ||
+                                      _upi.text.isEmpty) {
                                     ToastUtil.showToast(
                                         context,
                                         'Error',
@@ -302,6 +314,7 @@ class _SignUpState extends State<SignUp> {
                                       "Email": _email.text.toString(),
                                       "Password": _password.text.toString(),
                                       "Mobile": _mobile.text.toString(),
+                                      "UPI": _upi.text.toString(),
                                     };
                                     signUp(_email.text, _password.text, data);
                                   }

@@ -157,11 +157,11 @@ class LoginState extends State<Login> {
               ),
             ),
             DraggableScrollableSheet(
-              initialChildSize: 0.5, // Initial size of the sheet
+              initialChildSize: 0.7, // Initial size of the sheet
               minChildSize:
                   0.5, // Minimum size to which the sheet can be dragged
               maxChildSize:
-                  0.5, // Maximum size to which the sheet can be dragged
+                  0.7, // Maximum size to which the sheet can be dragged
               builder:
                   (BuildContext context, ScrollController scrollController) {
                 return Scaffold(

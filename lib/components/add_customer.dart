@@ -9,9 +9,9 @@ import 'package:toastification/toastification.dart';
 void showAddCustomerBottomSheet(BuildContext context) {
   String? mealType;
   String? selectedTiffin;
-  String? timePeriod;
-  DateTime? startDate;
-  DateTime? endDate;
+  // String? timePeriod;
+  // DateTime? startDate;
+  // DateTime? endDate;
   TextEditingController _name = TextEditingController();
   TextEditingController _details = TextEditingController();
   TextEditingController _mobile = TextEditingController();
@@ -19,50 +19,54 @@ void showAddCustomerBottomSheet(BuildContext context) {
   TextEditingController _address2 = TextEditingController();
   bool isLoading = false;
 
-  Future<void> addFixedTimePeriodDocuments(String email) async {
-    Map<String, int> data = {"total": 0};
-    if (mealType == "Lunch") {
-      data["lunch"] = 0;
-    } else if (mealType == "Dinner") {
-      data["dinner"] = 0;
-    } else if (mealType == "Both") {
-      data["lunch"] = 0;
-      data["dinner"] = 0;
-    }
-    DateTime currentDate = startDate!;
-    while (currentDate.isBefore(endDate!.add(const Duration(days: 1)))) {
-      await FirebaseFirestore.instance
-          .collection("providers")
-          .doc(email)
-          .collection("Customers")
-          .doc(_name.text)
-          .collection("TimePeriod")
-          .doc(currentDate.toIso8601String().split('T')[0])
-          .set(data);
-      currentDate = currentDate.add(const Duration(days: 1));
-    }
-  }
+  // Future<void> addFixedTimePeriodDocuments(String email) async {
+  //   Map<String, dynamic> data = {"total": 0};
+  //   if (mealType == "Lunch") {
+  //     data["lunch"] = 0;
+  //     data["lunchType"] = "";
+  //   } else if (mealType == "Dinner") {
+  //     data["dinner"] = 0;
+  //     data["dinnerType"] = "";
+  //   } else if (mealType == "Both") {
+  //     data["lunch"] = 0;
+  //     data["dinner"] = 0;
+  //     data["dinnerType"] = "";
+  //     data["lunchType"] = "";
+  //   }
+  //   DateTime currentDate = startDate!;
+  //   while (currentDate.isBefore(endDate!.add(const Duration(days: 1)))) {
+  //     await FirebaseFirestore.instance
+  //         .collection("providers")
+  //         .doc(email)
+  //         .collection("Customers")
+  //         .doc(_name.text)
+  //         .collection("TimePeriod")
+  //         .doc(currentDate.toIso8601String().split('T')[0])
+  //         .set(data);
+  //     currentDate = currentDate.add(const Duration(days: 1));
+  //   }
+  // }
 
-  Future<void> addNotFixedTimePeriodDocuments(String email) async {
-    Map<String, int> data = {"total": 0};
-    if (mealType == "Lunch") {
-      data["lunch"] = 0;
-    } else if (mealType == "Dinner") {
-      data["dinner"] = 0;
-    } else if (mealType == "Both") {
-      data["lunch"] = 0;
-      data["dinner"] = 0;
-    }
+  // Future<void> addNotFixedTimePeriodDocuments(String email) async {
+  //   Map<String, int> data = {"total": 0};
+  //   if (mealType == "Lunch") {
+  //     data["lunch"] = 0;
+  //   } else if (mealType == "Dinner") {
+  //     data["dinner"] = 0;
+  //   } else if (mealType == "Both") {
+  //     data["lunch"] = 0;
+  //     data["dinner"] = 0;
+  //   }
 
-    await FirebaseFirestore.instance
-        .collection("providers")
-        .doc(email)
-        .collection("Customers")
-        .doc(_name.text)
-        .collection("TimePeriod")
-        .doc(startDate!.toIso8601String().split('T')[0])
-        .set(data);
-  }
+  //   await FirebaseFirestore.instance
+  //       .collection("providers")
+  //       .doc(email)
+  //       .collection("Customers")
+  //       .doc(_name.text)
+  //       .collection("TimePeriod")
+  //       .doc(startDate!.toIso8601String().split('T')[0])
+  //       .set(data);
+  // }
 
   Future<void> addCustomer(final data) async {
     try {
@@ -71,17 +75,25 @@ void showAddCustomerBottomSheet(BuildContext context) {
           .collection("providers")
           .doc(user!.email)
           .collection("Customers")
-          .doc(_name.text.toString())
+          .doc(_mobile.text.toString())
           .set(data);
 
-      if (timePeriod == "Fixed" && startDate != null && endDate != null) {
-        await addFixedTimePeriodDocuments(user.email!);
-      } else if (timePeriod == "Not fixed" && startDate != null) {
-        await addNotFixedTimePeriodDocuments(user.email!);
-      }
+      // await FirebaseFirestore.instance
+      //     .collection("providers")
+      //     .doc(user.email)
+      //     .collection("Customers")
+      //     .doc(_mobile.text.toString())
+      //     .collection("TimePeriod")
+      //     .add({"Lunch": 0, "Dinner": );
+
+      // if (timePeriod == "Fixed" && startDate != null && endDate != null) {
+      //   await addFixedTimePeriodDocuments(user.email!);
+      // } else if (timePeriod == "Not fixed" && startDate != null) {
+      //   await addNotFixedTimePeriodDocuments(user.email!);
+      // }
 
       ToastUtil.showToast(context, "Success", ToastificationType.success,
-          "Tiffin added successfully.");
+          "Customer added successfully.");
       Navigator.pop(context);
     } catch (e) {
       ToastUtil.showToast(
@@ -277,133 +289,133 @@ void showAddCustomerBottomSheet(BuildContext context) {
                             });
                           },
                         ),
-                        const SizedBox(height: 15),
-                        DropdownButtonFormField(
-                          value: timePeriod,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
-                              borderSide: const BorderSide(color: black),
-                            ),
-                            labelText: 'Time Period*',
-                            labelStyle: GoogleFonts.manrope(
-                              textStyle: const TextStyle(
-                                color: black,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: "Fixed",
-                              child: Text(
-                                "Fixed",
-                                style: GoogleFonts.manrope(),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: "Not fixed",
-                              child: Text(
-                                "Not fixed",
-                                style: GoogleFonts.manrope(),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              timePeriod = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 15),
-                        GestureDetector(
-                          onTap: () async {
-                            final pickedStartDate = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime.now(),
-                              lastDate: DateTime(2101),
-                            );
-                            if (pickedStartDate != null) {
-                              setState(() {
-                                startDate = pickedStartDate;
-                              });
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(color: black),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  startDate == null
-                                      ? 'Select start date*'
-                                      : "${startDate!.day}/${startDate!.month}/${startDate!.year}",
-                                  style: GoogleFonts.manrope(
-                                    textStyle: const TextStyle(
-                                      color: black,
-                                    ),
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.calendar_today,
-                                  color: black,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        if (timePeriod == "Fixed") ...[
-                          GestureDetector(
-                            onTap: () async {
-                              final pickedEndDate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime(2101),
-                              );
-                              if (pickedEndDate != null) {
-                                setState(() {
-                                  endDate = pickedEndDate;
-                                });
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: black),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    endDate == null
-                                        ? 'Select end date*'
-                                        : "${endDate!.day}/${endDate!.month}/${endDate!.year}",
-                                    style: GoogleFonts.manrope(
-                                      textStyle: const TextStyle(
-                                        color: black,
-                                      ),
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.calendar_today,
-                                    color: black,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                        // const SizedBox(height: 15),
+                        // DropdownButtonFormField(
+                        //   value: timePeriod,
+                        //   decoration: InputDecoration(
+                        //     focusedBorder: OutlineInputBorder(
+                        //       borderRadius: BorderRadius.circular(15),
+                        //       borderSide: const BorderSide(color: black),
+                        //     ),
+                        //     labelText: 'Time Period*',
+                        //     labelStyle: GoogleFonts.manrope(
+                        //       textStyle: const TextStyle(
+                        //         color: black,
+                        //       ),
+                        //     ),
+                        //     border: OutlineInputBorder(
+                        //       borderRadius: BorderRadius.circular(15),
+                        //     ),
+                        //   ),
+                        //   items: [
+                        //     DropdownMenuItem(
+                        //       value: "Fixed",
+                        //       child: Text(
+                        //         "Fixed",
+                        //         style: GoogleFonts.manrope(),
+                        //       ),
+                        //     ),
+                        //     DropdownMenuItem(
+                        //       value: "Not fixed",
+                        //       child: Text(
+                        //         "Not fixed",
+                        //         style: GoogleFonts.manrope(),
+                        //       ),
+                        //     ),
+                        //   ],
+                        //   onChanged: (value) {
+                        //     setState(() {
+                        //       timePeriod = value;
+                        //     });
+                        //   },
+                        // ),
+                        // const SizedBox(height: 15),
+                        // GestureDetector(
+                        //   onTap: () async {
+                        //     final pickedStartDate = await showDatePicker(
+                        //       context: context,
+                        //       initialDate: DateTime.now(),
+                        //       firstDate: DateTime.now(),
+                        //       lastDate: DateTime(2101),
+                        //     );
+                        //     if (pickedStartDate != null) {
+                        //       setState(() {
+                        //         startDate = pickedStartDate;
+                        //       });
+                        //     }
+                        //   },
+                        //   child: Container(
+                        //     padding: const EdgeInsets.all(16.0),
+                        //     decoration: BoxDecoration(
+                        //       borderRadius: BorderRadius.circular(15),
+                        //       border: Border.all(color: black),
+                        //     ),
+                        //     child: Row(
+                        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //       children: [
+                        //         Text(
+                        //           startDate == null
+                        //               ? 'Select start date*'
+                        //               : "${startDate!.day}/${startDate!.month}/${startDate!.year}",
+                        //           style: GoogleFonts.manrope(
+                        //             textStyle: const TextStyle(
+                        //               color: black,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //         const Icon(
+                        //           Icons.calendar_today,
+                        //           color: black,
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ),
+                        // ),
+                        // const SizedBox(height: 15),
+                        // if (timePeriod == "Fixed") ...[
+                        //   GestureDetector(
+                        //     onTap: () async {
+                        //       final pickedEndDate = await showDatePicker(
+                        //         context: context,
+                        //         initialDate: DateTime.now(),
+                        //         firstDate: DateTime.now(),
+                        //         lastDate: DateTime(2101),
+                        //       );
+                        //       if (pickedEndDate != null) {
+                        //         setState(() {
+                        //           endDate = pickedEndDate;
+                        //         });
+                        //       }
+                        //     },
+                        //     child: Container(
+                        //       padding: const EdgeInsets.all(16.0),
+                        //       decoration: BoxDecoration(
+                        //         borderRadius: BorderRadius.circular(15),
+                        //         border: Border.all(color: black),
+                        //       ),
+                        //       child: Row(
+                        //         mainAxisAlignment:
+                        //             MainAxisAlignment.spaceBetween,
+                        //         children: [
+                        //           Text(
+                        //             endDate == null
+                        //                 ? 'Select end date*'
+                        //                 : "${endDate!.day}/${endDate!.month}/${endDate!.year}",
+                        //             style: GoogleFonts.manrope(
+                        //               textStyle: const TextStyle(
+                        //                 color: black,
+                        //               ),
+                        //             ),
+                        //           ),
+                        //           const Icon(
+                        //             Icons.calendar_today,
+                        //             color: black,
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ],
                         const SizedBox(height: 15),
                         TextField(
                           controller: _address,
@@ -496,7 +508,6 @@ void showAddCustomerBottomSheet(BuildContext context) {
                                   if (_name.text.isEmpty ||
                                       mealType == null ||
                                       selectedTiffin == null ||
-                                      startDate == null ||
                                       _mobile.text.isEmpty ||
                                       _address.text.isEmpty) {
                                     ToastUtil.showToast(
@@ -504,14 +515,6 @@ void showAddCustomerBottomSheet(BuildContext context) {
                                       "Error",
                                       ToastificationType.error,
                                       "Please fill all required fields.",
-                                    );
-                                  } else if (timePeriod == "Fixed" &&
-                                      endDate == null) {
-                                    ToastUtil.showToast(
-                                      context,
-                                      "Error",
-                                      ToastificationType.error,
-                                      "Error in time period selection!",
                                     );
                                   } else if (_mobile.text.length != 10) {
                                     ToastUtil.showToast(
@@ -527,15 +530,15 @@ void showAddCustomerBottomSheet(BuildContext context) {
                                       "MealType": mealType.toString(),
                                       "SelectedTiffin":
                                           selectedTiffin.toString(),
-                                      "Start Date": startDate,
-                                      "End Date": endDate,
+                                      // "Start Date": startDate,
+                                      // "End Date": endDate,
                                       "Mobile": _mobile.text.toString(),
                                       "Address":
                                           _address.text.toString().trim(),
                                       "Address 2":
                                           _address2.text.toString().trim(),
-                                      "Fixed":
-                                          timePeriod == "Fixed" ? true : false,
+                                      // "Fixed":
+                                      //     timePeriod == "Fixed" ? true : false,
                                     };
                                     setState(() {
                                       isLoading = true;

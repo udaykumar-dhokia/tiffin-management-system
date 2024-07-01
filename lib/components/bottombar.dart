@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tiffin/constants/color.dart';
 import 'package:tiffin/screens/bill.dart';
-import 'package:tiffin/screens/customers.dart';
+import 'package:tiffin/screens/customers/customers.dart';
 import 'package:tiffin/screens/homepage.dart';
 import 'package:tiffin/screens/profile.dart';
 import 'package:tiffin/screens/tiffin.dart';

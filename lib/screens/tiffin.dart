@@ -49,7 +49,7 @@ class _TiffinState extends State<Tiffin> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-            "Delete ${tiffins[0]["Name"]} Tiffin",
+            "Delete Tiffin",
             style: GoogleFonts.manrope(
               textStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
@@ -115,23 +115,27 @@ class _TiffinState extends State<Tiffin> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: isLoading
-          ? const Center(
+    return isLoading
+        ? const Scaffold(
+            backgroundColor: white,
+            body: Center(
               child: CircularProgressIndicator(
                 color: primaryDark,
               ),
-            )
-          : Scaffold(
-              floatingActionButton: FloatingActionButton(
-                onPressed: () => showAddTiffinBottomSheet(context),
-                backgroundColor: primaryDark,
-                foregroundColor: white,
-                shape: const CircleBorder(),
-                tooltip: "Add tiffin",
-                child: const Icon(Icons.add),
-              ),
-              body: SingleChildScrollView(
+            ),
+          )
+        : Scaffold(
+            backgroundColor: white,
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => showAddTiffinBottomSheet(context),
+              backgroundColor: primaryDark,
+              foregroundColor: white,
+              shape: const CircleBorder(),
+              tooltip: "Add tiffin",
+              child: const Icon(Icons.add),
+            ),
+            body: SafeArea(
+              child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
                   child: Column(
@@ -366,6 +370,6 @@ class _TiffinState extends State<Tiffin> {
                 ),
               ),
             ),
-    );
+          );
   }
 }
