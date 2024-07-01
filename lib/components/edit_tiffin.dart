@@ -8,6 +8,7 @@ import 'package:toastification/toastification.dart';
 
 void showEditTiffinBottomSheet(BuildContext context, String id) {
   showModalBottomSheet(
+    backgroundColor: white,
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

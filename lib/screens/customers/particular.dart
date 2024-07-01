@@ -164,7 +164,6 @@ class ParticularCustomerState extends State<ParticularCustomer> {
   }
 
   Future<void> _refresh() async {
-    await getCustomer();
     await _fetchData();
   }
 
@@ -174,7 +173,9 @@ class ParticularCustomerState extends State<ParticularCustomer> {
         ? const Scaffold(
             backgroundColor: white,
             body: Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: primaryDark,
+              ),
             ),
           )
         : RefreshIndicator(
@@ -213,6 +214,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                       onTap: () async {
                         showAddTiffinToCustomerBottomSheet(
                             context, widget.mobile);
+                        _refresh();
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 2 - 15,
@@ -362,6 +364,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                         height: 30,
                       ),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             "History",
@@ -376,106 +379,122 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                           const SizedBox(
                             width: 5,
                           ),
-                          const Icon(Icons.history),
+                          GestureDetector(
+                            onTap: () async {
+                              await _refresh();
+                            },
+                            child: const Icon(Icons.history),
+                          ),
                         ],
                       ),
-                      SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: FutureBuilder<
-                            Map<String, List<Map<String, dynamic>>>>(
-                          future: _fetchData(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
+                      RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: FutureBuilder<
+                              Map<String, List<Map<String, dynamic>>>>(
+                            future: _fetchData(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(
+                                    color: primaryDark,
+                                  ),
+                                );
+                              }
 
-                            if (snapshot.hasError) {
-                              return Center(
-                                  child: Text('Error: ${snapshot.error}'));
-                            }
+                              if (snapshot.hasError) {
+                                return Center(
+                                    child: Text('Error: ${snapshot.error}'));
+                              }
 
-                            Map<String, List<Map<String, dynamic>>>
-                                groupedData = snapshot.data ?? {};
+                              Map<String, List<Map<String, dynamic>>>
+                                  groupedData = snapshot.data ?? {};
 
-                            return Container(
-                              // decoration: BoxDecoration(
-                              //   borderRadius: BorderRadius.circular(15),
-                              //   color: Colors.grey.withOpacity(0.3),
-                              // ),
-                              height: MediaQuery.of(context).size.height / 2,
-                              child: ListView.builder(
-                                itemCount: groupedData.keys.length,
-                                itemBuilder: (context, index) {
-                                  String monthKey =
-                                      groupedData.keys.elementAt(index);
-                                  List<Map<String, dynamic>> monthData =
-                                      groupedData[monthKey]!;
+                              return SizedBox(
+                                // decoration: BoxDecoration(
+                                //   borderRadius: BorderRadius.circular(15),
+                                //   color: Colors.grey.withOpacity(0.3),
+                                // ),
+                                height: MediaQuery.of(context).size.height / 2,
+                                child: ListView.builder(
+                                  itemCount: groupedData.keys.length,
+                                  itemBuilder: (context, index) {
+                                    String monthKey =
+                                        groupedData.keys.elementAt(index);
+                                    List<Map<String, dynamic>> monthData =
+                                        groupedData[monthKey]!;
 
-                                  List<String> allColumns =
-                                      _getAllColumns(monthData);
+                                    List<String> allColumns =
+                                        _getAllColumns(monthData);
 
-                                  return ExpansionTile(
-                                    initiallyExpanded: isExpanded,
-                                    enableFeedback: true,
-                                    shape: const BeveledRectangleBorder(),
-                                    subtitle: Text(
-                                      "Total: ${monthData.length.toString()}",
-                                      style: GoogleFonts.manrope(
-                                        textStyle: TextStyle(
-                                          fontSize: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.03,
+                                    return ExpansionTile(
+                                      textColor: primaryDark,
+                                      backgroundColor: primaryColor,
+                                      initiallyExpanded: isExpanded,
+                                      enableFeedback: true,
+                                      shape: const BeveledRectangleBorder(),
+                                      subtitle: Text(
+                                        "Total: ${monthData.length.toString()}",
+                                        style: GoogleFonts.manrope(
+                                          textStyle: TextStyle(
+                                            fontSize: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.03,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize
-                                          .min, // Ensure the row takes minimum space
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.download,
-                                            color: black,
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize
+                                            .min, // Ensure the row takes minimum space
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.list_alt_rounded,
+                                              color: black,
+                                            ),
+                                            onPressed: () async {
+                                              _generateInvoiceForMonth(
+                                                  monthData, monthKey);
+                                            },
                                           ),
-                                          onPressed: () async {
-                                            _generateInvoiceForMonth(
-                                                monthData, monthKey);
-                                          },
+                                        ],
+                                      ),
+                                      title: Text(
+                                        DateFormat('MMMM yyyy').format(
+                                            DateTime.parse('$monthKey-01')),
+                                        style: GoogleFonts.manrope(
+                                          textStyle: TextStyle(
+                                            fontSize: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.05,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      children: [
+                                        SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: DataTable(
+                                            border: TableBorder.all(
+                                              width: 0.5,
+                                              color: primaryDark,
+                                            ),
+                                            columns: _createColumns(allColumns),
+                                            rows: _createRows(
+                                                monthData, allColumns),
+                                          ),
                                         ),
                                       ],
-                                    ),
-                                    title: Text(
-                                      DateFormat('MMMM yyyy').format(
-                                          DateTime.parse('$monthKey-01')),
-                                      style: GoogleFonts.manrope(
-                                        textStyle: TextStyle(
-                                          fontSize: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.05,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    children: [
-                                      SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: DataTable(
-                                          columns: _createColumns(allColumns),
-                                          rows: _createRows(
-                                              monthData, allColumns),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            );
-                          },
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -495,43 +514,49 @@ class ParticularCustomerState extends State<ParticularCustomer> {
   }
 
   List<DataColumn> _createColumns(List<String> columns) {
-    return columns.map((column) {
-      return DataColumn(
-        label: column == "lunchType"
-            ? Text(
-                "Lunch type",
-                style: GoogleFonts.manrope(
-                    textStyle: const TextStyle(fontWeight: FontWeight.bold)),
-              )
-            : column == "dinnerType"
-                ? Text(
-                    "Dinner type",
-                    style: GoogleFonts.manrope(
-                        textStyle:
-                            const TextStyle(fontWeight: FontWeight.bold)),
-                  )
-                : column == "Lunch"
-                    ? Text(
-                        "Lunch (₹)",
-                        style: GoogleFonts.manrope(
+    return columns.map(
+      (column) {
+        return DataColumn(
+          label: column == "lunchType"
+              ? Text(
+                  "Lunch type",
+                  style: GoogleFonts.manrope(
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                )
+              : column == "dinnerType"
+                  ? Text(
+                      "Dinner type",
+                      style: GoogleFonts.manrope(
+                          textStyle:
+                              const TextStyle(fontWeight: FontWeight.bold)),
+                    )
+                  : column == "Lunch"
+                      ? Text(
+                          "Lunch (₹)",
+                          style: GoogleFonts.manrope(
                             textStyle:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                      )
-                    : column == "Dinner"
-                        ? Text(
-                            "Dinner (₹)",
-                            style: GoogleFonts.manrope(
-                                textStyle: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                          )
-                        : Text(
-                            column,
-                            style: GoogleFonts.manrope(
-                                textStyle: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
+                                const TextStyle(fontWeight: FontWeight.bold),
                           ),
-      );
-    }).toList();
+                        )
+                      : column == "Dinner"
+                          ? Text(
+                              "Dinner (₹)",
+                              style: GoogleFonts.manrope(
+                                textStyle: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            )
+                          : Text(
+                              column,
+                              style: GoogleFonts.manrope(
+                                textStyle: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+        );
+      },
+    ).toList();
   }
 
   List<DataRow> _createRows(
@@ -624,7 +649,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    'Invoice for ${DateFormat('MMMM yyyy').format(DateTime.parse(monthKey + '-01'))}',
+                    'Invoice for ${DateFormat('MMMM yyyy').format(DateTime.parse('$monthKey-01'))}',
                     style: pw.TextStyle(
                         fontSize: 18, fontWeight: pw.FontWeight.bold),
                   ),
@@ -695,14 +720,14 @@ class ParticularCustomerState extends State<ParticularCustomer> {
     );
 
     try {
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save(),
-      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('PDF generated successfully for $monthKey'),
           duration: const Duration(seconds: 2),
         ),
+      );
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -19,55 +19,6 @@ void showAddCustomerBottomSheet(BuildContext context) {
   TextEditingController _address2 = TextEditingController();
   bool isLoading = false;
 
-  // Future<void> addFixedTimePeriodDocuments(String email) async {
-  //   Map<String, dynamic> data = {"total": 0};
-  //   if (mealType == "Lunch") {
-  //     data["lunch"] = 0;
-  //     data["lunchType"] = "";
-  //   } else if (mealType == "Dinner") {
-  //     data["dinner"] = 0;
-  //     data["dinnerType"] = "";
-  //   } else if (mealType == "Both") {
-  //     data["lunch"] = 0;
-  //     data["dinner"] = 0;
-  //     data["dinnerType"] = "";
-  //     data["lunchType"] = "";
-  //   }
-  //   DateTime currentDate = startDate!;
-  //   while (currentDate.isBefore(endDate!.add(const Duration(days: 1)))) {
-  //     await FirebaseFirestore.instance
-  //         .collection("providers")
-  //         .doc(email)
-  //         .collection("Customers")
-  //         .doc(_name.text)
-  //         .collection("TimePeriod")
-  //         .doc(currentDate.toIso8601String().split('T')[0])
-  //         .set(data);
-  //     currentDate = currentDate.add(const Duration(days: 1));
-  //   }
-  // }
-
-  // Future<void> addNotFixedTimePeriodDocuments(String email) async {
-  //   Map<String, int> data = {"total": 0};
-  //   if (mealType == "Lunch") {
-  //     data["lunch"] = 0;
-  //   } else if (mealType == "Dinner") {
-  //     data["dinner"] = 0;
-  //   } else if (mealType == "Both") {
-  //     data["lunch"] = 0;
-  //     data["dinner"] = 0;
-  //   }
-
-  //   await FirebaseFirestore.instance
-  //       .collection("providers")
-  //       .doc(email)
-  //       .collection("Customers")
-  //       .doc(_name.text)
-  //       .collection("TimePeriod")
-  //       .doc(startDate!.toIso8601String().split('T')[0])
-  //       .set(data);
-  // }
-
   Future<void> addCustomer(final data) async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
@@ -77,20 +28,6 @@ void showAddCustomerBottomSheet(BuildContext context) {
           .collection("Customers")
           .doc(_mobile.text.toString())
           .set(data);
-
-      // await FirebaseFirestore.instance
-      //     .collection("providers")
-      //     .doc(user.email)
-      //     .collection("Customers")
-      //     .doc(_mobile.text.toString())
-      //     .collection("TimePeriod")
-      //     .add({"Lunch": 0, "Dinner": );
-
-      // if (timePeriod == "Fixed" && startDate != null && endDate != null) {
-      //   await addFixedTimePeriodDocuments(user.email!);
-      // } else if (timePeriod == "Not fixed" && startDate != null) {
-      //   await addNotFixedTimePeriodDocuments(user.email!);
-      // }
 
       ToastUtil.showToast(context, "Success", ToastificationType.success,
           "Customer added successfully.");
@@ -121,6 +58,7 @@ void showAddCustomerBottomSheet(BuildContext context) {
   }
 
   showModalBottomSheet(
+    backgroundColor: white,
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

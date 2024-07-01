@@ -17,9 +17,11 @@ class HomepageState extends State<Homepage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: white,
       resizeToAvoidBottomInset: true,
       floatingActionButton: _buildSpeedDial(),
       appBar: AppBar(
+        backgroundColor: white,
         actions: [
           IconButton(
             onPressed: () {
@@ -63,5 +65,3 @@ class HomepageState extends State<Homepage> {
     );
   }
 }
-
-

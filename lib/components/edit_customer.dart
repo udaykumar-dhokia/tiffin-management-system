@@ -8,6 +8,7 @@ import 'package:toastification/toastification.dart';
 
 void showEditCustomerBottomSheet(BuildContext context, String id) {
   showModalBottomSheet(
+    backgroundColor: white,
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
@@ -123,9 +124,12 @@ class _EditCustomerFormState extends State<EditCustomerForm> {
       future: fetchTiffinNames(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(
-              color: primaryDark,
+          return const Scaffold(
+            backgroundColor: white,
+            body: Center(
+              child: CircularProgressIndicator(
+                color: primaryDark,
+              ),
             ),
           );
         }

@@ -33,6 +33,7 @@ void showAddTiffinBottomSheet(BuildContext context) {
   }
 
   showModalBottomSheet(
+    backgroundColor: white,
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

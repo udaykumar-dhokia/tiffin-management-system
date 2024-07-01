@@ -131,6 +131,7 @@ void showAddTiffinToCustomerBottomSheet(BuildContext context, String id) {
   }
 
   showModalBottomSheet(
+    backgroundColor: white,
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

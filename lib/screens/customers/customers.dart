@@ -141,6 +141,8 @@ class _CustomersState extends State<Customers> {
             ),
             body: SafeArea(
               child: RefreshIndicator(
+                backgroundColor: primaryColor,
+                color: primaryDark,
                 onRefresh: _refresh,
                 child: SingleChildScrollView(
                   child: Padding(
@@ -185,44 +187,48 @@ class _CustomersState extends State<Customers> {
                         const SizedBox(
                           height: 20,
                         ),
-                        TextFormField(
-                          cursorColor: black,
-                          controller: searchController,
-                          decoration: InputDecoration(
-                            suffixIcon: const Icon(
-                              Icons.search,
-                              color: Colors.grey,
-                            ),
-                            label: Text(
-                              "Search",
-                              style: GoogleFonts.manrope(
-                                textStyle: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize:
-                                      MediaQuery.of(context).size.width * 0.04,
+                        if (customers.isNotEmpty)
+                          TextFormField(
+                            cursorColor: black,
+                            controller: searchController,
+                            decoration: InputDecoration(
+                              suffixIcon: const Icon(
+                                Icons.search,
+                                color: Colors.grey,
+                              ),
+                              label: Text(
+                                "Search",
+                                style: GoogleFonts.manrope(
+                                  textStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize:
+                                        MediaQuery.of(context).size.width *
+                                            0.04,
+                                  ),
                                 ),
                               ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                    const BorderSide(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
                             ),
                           ),
-                        ),
                         const SizedBox(
                           height: 5,
                         ),
-                        Text(
-                          "*Swipe from left to right for more options.",
-                          style: GoogleFonts.manrope(
-                            textStyle: const TextStyle(
-                              color: Colors.grey,
+                        if (customers.isNotEmpty)
+                          Text(
+                            "*Swipe from left to right for more options.",
+                            style: GoogleFonts.manrope(
+                              textStyle: const TextStyle(
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                        ),
                         const SizedBox(
                           height: 10,
                         ),
