@@ -1,7 +1,3 @@
-Here's a README file tailored for your Tiffin Management System project on GitHub:
-
----
-
 # Tiffin Management System
 
 [![Flutter Version](https://img.shields.io/badge/Flutter-^3.0-blue.svg)](https://flutter.dev)
@@ -90,8 +86,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions or suggestions, please feel free to reach out:
 - GitHub: [@udaykumar-dhokia](https://github.com/udaykumar-dhokia)
-- LinkedIn: [Uday Kumar](https://www.linkedin.com/in/udaykumar-dhokia)
-
----
-
-This README provides a clear, detailed overview of the Tiffin Management System app, making it easy for other developers or potential contributors to understand and get started with the project. Let me know if you'd like to add more sections!
+- LinkedIn: [Udaykumar Dhokia](https://www.linkedin.com/in/udaykumar-dhokia)
