@@ -60,9 +60,9 @@ Welcome to the **Tiffin Management System**, the ultimate tool for tiffin servic
 
 | Feature          | Screenshot                                                 |
 |------------------|------------------------------------------------------------|
-| **Login Screen** | ![Login](screenshots/login.png)                            |
+| **Tiffins**      | ![Login](screenshots/tiffins.png)                          |
 | **Dashboard**    | ![Dashboard](screenshots/dashboard.png)                    |
-| **Order Tracking** | ![Order Tracking](screenshots/order_tracking.png)        |
+| **Customers**    | ![Order Tracking](screenshots/customers.png)               |
 | **Billing**      | ![Billing](screenshots/billing.png)                        |
 
 ## Usage
@@ -90,7 +90,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions or suggestions, please feel free to reach out:
 - GitHub: [@udaykumar-dhokia](https://github.com/udaykumar-dhokia)
-- LinkedIn: [Uday Kumar](https://www.linkedin.com/in/udaykumar)
+- LinkedIn: [Uday Kumar](https://www.linkedin.com/in/udaykumar-dhokia)
 
 ---
 
