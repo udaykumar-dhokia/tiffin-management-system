@@ -9,12 +9,9 @@ Welcome to the **Tiffin Management System**, the ultimate tool for tiffin servic
 ## Features
 
 - **Customer Management**: Add, edit, and manage customer profiles, preferences, and order details with ease.
-- **Order Tracking**: Keep track of daily and monthly orders for each customer.
 - **Automated Billing**: Generate monthly bills based on customer orders and send reminders for payments.
-- **Notifications**: Send notifications to customers for updates like menu, order status, and billing.
 - **Analytics & Reports**: Visualize your data with charts to analyze sales trends, customer satisfaction, and performance.
 - **User Authentication**: Secure login and registration for both providers and customers.
-- **Responsive Design**: Optimized for web, mobile, and tablet, ensuring smooth user experience on any device.
 
 ## Tech Stack
 
@@ -33,7 +30,7 @@ Welcome to the **Tiffin Management System**, the ultimate tool for tiffin servic
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/udaykumar-dhokia/tiffin.git
+   git clone https://github.com/udaykumar-dhokia/tiffin-management-system.git
    cd tiffin
    ```
 
@@ -56,7 +53,7 @@ Welcome to the **Tiffin Management System**, the ultimate tool for tiffin servic
 
 | Feature          | Screenshot                                                 |
 |------------------|------------------------------------------------------------|
-| **Tiffins**      | ![Login](screenshots/tiffins.png)                            |
+| **Tiffins**      | ![Login](screenshots/tiffins.png)                          |
 | **Dashboard**    | ![Dashboard](screenshots/dashboard.png)                    |
 | **Customers**    | ![Order Tracking](screenshots/customers.png)               |
 | **Billing**      | ![Billing](screenshots/billing.png)                        |
