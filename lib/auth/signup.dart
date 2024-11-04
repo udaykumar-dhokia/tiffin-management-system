@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:tiffin/auth/login.dart';
-import 'package:tiffin/components/bottombar.dart';
-import 'package:tiffin/components/toast.dart';
+import 'package:tiffin/components/bottombar/bottombar.dart';
+import 'package:tiffin/components/toast/toast.dart';
 import 'package:tiffin/constants/color.dart';
 import 'package:toastification/toastification.dart';
 
@@ -25,6 +25,7 @@ class _SignUpState extends State<SignUp> {
   TextEditingController _mobile = TextEditingController();
   TextEditingController _password = TextEditingController();
   TextEditingController _upi = TextEditingController();
+  TextEditingController _address = TextEditingController();
   bool _showPassword = true;
   bool _isLoading = false;
   bool _isEmailTaken = false;
@@ -190,11 +191,11 @@ class _SignUpState extends State<SignUp> {
               ),
             ),
             DraggableScrollableSheet(
-              initialChildSize: 0.7, // Initial size of the sheet
+              initialChildSize: 0.75, // Initial size of the sheet
               minChildSize:
-                  0.7, // Minimum size to which the sheet can be dragged
+                  0.75, // Minimum size to which the sheet can be dragged
               maxChildSize:
-                  0.7, // Maximum size to which the sheet can be dragged
+                  0.75, // Maximum size to which the sheet can be dragged
               builder:
                   (BuildContext context, ScrollController scrollController) {
                 return Scaffold(
@@ -232,6 +233,11 @@ class _SignUpState extends State<SignUp> {
                               ),
                               _textField('Mobile', TextInputType.phone,
                                   _showPassword, () {}, _mobile),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              _textField('Address', TextInputType.text,
+                                  _showPassword, () {}, _address),
                               const SizedBox(
                                 height: 10,
                               ),
@@ -289,7 +295,8 @@ class _SignUpState extends State<SignUp> {
                                       _email.text.isEmpty ||
                                       _mobile.text.isEmpty ||
                                       _password.text.isEmpty ||
-                                      _upi.text.isEmpty) {
+                                      _upi.text.isEmpty ||
+                                      _address.text.isEmpty) {
                                     ToastUtil.showToast(
                                         context,
                                         'Error',
@@ -315,6 +322,7 @@ class _SignUpState extends State<SignUp> {
                                       "Password": _password.text.toString(),
                                       "Mobile": _mobile.text.toString(),
                                       "UPI": _upi.text.toString(),
+                                      "Address": _address.text.toString(),
                                     };
                                     signUp(_email.text, _password.text, data);
                                   }

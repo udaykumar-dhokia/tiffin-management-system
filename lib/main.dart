@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:tiffin/auth/auth.dart';
+import 'package:tiffin/auth/login.dart';
+import 'package:tiffin/components/bottombar/bottombar.dart';
 import 'package:tiffin/constants/color.dart';
 import 'package:tiffin/firebase_options.dart';
+import 'package:firebase_auth_handler/firebase_auth_handler.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +21,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitDown, DeviceOrientation.portraitUp]);
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Splash(),
@@ -43,7 +48,12 @@ class _SplashState extends State<Splash> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const Auth(),
+            builder: (context) => Auth(
+              backgroundColor: transparent,
+              loadingColor: primaryDark,
+              loggedInBuilder: (context) => const Bottombar(),
+              notLoggedInBuilder: (context) => const Login(),
+            ),
           ),
         );
       },

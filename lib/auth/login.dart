@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:tiffin/auth/signup.dart';
-import 'package:tiffin/components/bottombar.dart';
-import 'package:tiffin/components/toast.dart';
+import 'package:tiffin/components/bottombar/bottombar.dart';
+import 'package:tiffin/components/toast/toast.dart';
 import 'package:tiffin/constants/color.dart';
 import 'package:toastification/toastification.dart';
 
@@ -102,10 +102,10 @@ class LoginState extends State<Login> {
                   child: Text(
                     "SignUp",
                     style: GoogleFonts.manrope(
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         color: black,
                         decoration: TextDecoration.none,
-                        fontSize: MediaQuery.of(context).size.width * 0.04,
+                        fontSize: 15,
                       ),
                     ),
                   ),

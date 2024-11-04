@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:tiffin/components/add_tiffin.dart';
-import 'package:tiffin/components/edit_tiffin.dart';
+import 'package:tiffin/components/tiffin/add_tiffin.dart';
+import 'package:tiffin/components/tiffin/edit_tiffin.dart';
 import 'package:tiffin/constants/color.dart';
 
 class Tiffin extends StatefulWidget {
-  const Tiffin({super.key});
+  final dark;
+  ScrollController scrollController;
+  Tiffin({super.key, required this.dark, required this.scrollController});
 
   @override
   State<Tiffin> createState() => _TiffinState();
@@ -15,7 +19,9 @@ class Tiffin extends StatefulWidget {
 
 class _TiffinState extends State<Tiffin> {
   List<Map<String, dynamic>> tiffins = [];
+  Map<String,dynamic> provider = {};
   bool isLoading = false;
+  bool dark = false;
 
   Future<void> getTiffin() async {
     setState(() {
@@ -37,10 +43,30 @@ class _TiffinState extends State<Tiffin> {
         }).toList();
       });
     });
+
+    await FirebaseFirestore.instance
+        .collection("providers")
+        .doc(user.email)
+        .snapshots()
+        .listen((snapshot) {
+      setState(() {
+        provider = snapshot.data() as Map<String, dynamic>;
+
+        if(provider.containsKey("isDarkMode")){
+          setState(() {
+            dark = provider["isDarkMode"];
+          });
+        }
+      });
+
+    });
+
     setState(() {
       isLoading = false;
     });
+
   }
+
 
   Future<void> deleteTiffin(String id) async {
     // Show the alert dialog
@@ -110,22 +136,24 @@ class _TiffinState extends State<Tiffin> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
     getTiffin();
+
   }
 
   @override
   Widget build(BuildContext context) {
     return isLoading
-        ? const Scaffold(
-            backgroundColor: white,
+        ?  Scaffold(
+            backgroundColor: dark? darkPrimary : primaryColor,
             body: Center(
               child: CircularProgressIndicator(
-                color: primaryDark,
+                color: dark? primaryColor : primaryDark,
               ),
             ),
           )
         : Scaffold(
-            backgroundColor: white,
+            backgroundColor: dark? darkPrimary : white,
             floatingActionButton: FloatingActionButton(
               onPressed: () => showAddTiffinBottomSheet(context),
               backgroundColor: primaryDark,
@@ -134,52 +162,96 @@ class _TiffinState extends State<Tiffin> {
               tooltip: "Add tiffin",
               child: const Icon(Icons.add),
             ),
+            appBar: AppBar(
+              backgroundColor: dark? darkPrimary : white,
+              toolbarHeight: 100,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 30),
+                    child: Text(
+                      "Tiffins",
+                      style: GoogleFonts.manrope(
+                        textStyle: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: dark? white : darkPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  tiffins.isEmpty
+                      ? Text(
+                    "Please add tiffins",
+                    style: GoogleFonts.manrope(),
+                  )
+                      : Container(
+                    child: Text(
+                      "Total (${tiffins.length})",
+                      style: GoogleFonts.manrope(
+                        textStyle: TextStyle(
+                          color: dark? white.withOpacity(0.5) : darkPrimary.withOpacity(0.5),
+                          fontSize:
+                          14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             body: SafeArea(
               child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 30),
-                        child: Text(
-                          "Tiffins",
-                          style: GoogleFonts.manrope(
-                            textStyle: TextStyle(
-                              fontSize:
-                                  MediaQuery.of(context).size.width * 0.09,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      tiffins.isEmpty
-                          ? Text(
-                              "Please add tiffins",
-                              style: GoogleFonts.manrope(),
-                            )
-                          : Container(
-                              child: Text(
-                                "Total (${tiffins.length})",
-                                style: GoogleFonts.manrope(
-                                  textStyle: TextStyle(
-                                    color: black.withOpacity(0.5),
-                                    fontSize:
-                                        MediaQuery.of(context).size.width *
-                                            0.05,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
+                      // Container(
+                      //   margin: const EdgeInsets.only(top: 30),
+                      //   child: Text(
+                      //     "Tiffins",
+                      //     style: GoogleFonts.manrope(
+                      //       textStyle: TextStyle(
+                      //         fontSize:
+                      //             MediaQuery.of(context).size.width * 0.09,
+                      //         fontWeight: FontWeight.bold,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                      // tiffins.isEmpty
+                      //     ? Text(
+                      //         "Please add tiffins",
+                      //         style: GoogleFonts.manrope(),
+                      //       )
+                      //     : Container(
+                      //         child: Text(
+                      //           "Total (${tiffins.length})",
+                      //           style: GoogleFonts.manrope(
+                      //             textStyle: TextStyle(
+                      //               color: black.withOpacity(0.5),
+                      //               fontSize:
+                      //                   MediaQuery.of(context).size.width *
+                      //                       0.05,
+                      //               fontWeight: FontWeight.bold,
+                      //             ),
+                      //           ),
+                      //         ),
+                      //       ),
                       const SizedBox(
                         height: 30,
                       ),
                       Container(
-                        height: MediaQuery.of(context).size.height / 1.5,
+                        // height: MediaQuery.of(context).size.height - kBottomNavigationBarHeight*4,
                         child: ListView.builder(
+                          shrinkWrap: true,
+                          controller: widget.scrollController,
                           itemCount: tiffins.length,
                           itemBuilder: (context, item) {
                             return Card(

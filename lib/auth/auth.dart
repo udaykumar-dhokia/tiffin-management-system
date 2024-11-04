@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tiffin/auth/login.dart';
-import 'package:tiffin/components/bottombar.dart';
+import 'package:tiffin/components/bottombar/bottombar.dart';
 import 'package:tiffin/constants/color.dart';
 
 class Auth extends StatelessWidget {
@@ -10,7 +10,7 @@ class Auth extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: transparent,
+      backgroundColor: white,
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
@@ -20,7 +20,7 @@ class Auth extends StatelessWidget {
             );
           } else {
             if (snapshot.hasData) {
-              return const Bottombar();
+              return Bottombar(key: bottombarKey);
             } else {
               return const Login();
             }

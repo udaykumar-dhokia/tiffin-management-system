@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,16 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf_viewer_plugin/pdf_viewer_plugin.dart';
 import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:tiffin/components/add_tiffin_to_customer.dart';
-import 'package:tiffin/components/edit_customer.dart';
+import 'package:tiffin/components/customer/add_tiffin_to_customer.dart';
+import 'package:tiffin/components/customer/edit_customer.dart';
 import 'package:tiffin/constants/color.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../components/tiffin/delete_tiffin.dart';
 
 class ParticularCustomer extends StatefulWidget {
   String mobile;
@@ -32,7 +32,12 @@ class ParticularCustomerState extends State<ParticularCustomer> {
   bool isLoading = false;
   double totalAmount = 0;
   double tempAmount = 0;
+  double tempextraItemsCost = 0;
+  double extraItemsCost = 0;
+  bool dark = false;
   bool isExpanded = false;
+  double totalMonthlyAmount = 0;
+
 
   @override
   void initState() {
@@ -44,6 +49,34 @@ class ParticularCustomerState extends State<ParticularCustomer> {
     setState(() {
       isExpanded = !isExpanded;
     });
+  }
+
+  void fetchMonthlyIncome(String monthKey)async{
+    User? user = FirebaseAuth.instance.currentUser;
+    final timePeriodsSnapshot = await FirebaseFirestore.instance
+        .collection("providers")
+        .doc(user!.email)
+        .collection("Customers")
+        .doc(widget.mobile)
+        .collection("TimePeriod")
+        .get();
+
+    List<QueryDocumentSnapshot> filteredDocs =
+    timePeriodsSnapshot.docs.where((doc) {
+      return doc.id.startsWith(monthKey);
+    }).toList();
+
+    for (var timePeriodDoc in filteredDocs) {
+      var timePeriodData = timePeriodDoc.data() as Map<String, dynamic>;
+
+      var currentLunch =
+      timePeriodData.containsKey("Lunch") ? timePeriodData["Lunch"] : 0;
+      var currentDinner =
+      timePeriodData.containsKey("Dinner") ? timePeriodData["Dinner"] : 0;
+      setState(() {
+        totalMonthlyAmount += currentDinner + currentLunch;
+      });
+    }
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> _fetchData() async {
@@ -103,11 +136,17 @@ class ParticularCustomerState extends State<ParticularCustomer> {
 
     final data2 = await FirebaseFirestore.instance
         .collection("providers")
-        .doc(user!.email)
+        .doc(user.email)
         .snapshots()
         .listen((snapshot) {
       setState(() {
         provider = snapshot.data();
+
+        if(provider!.containsKey("isDarkMode")){
+          setState(() {
+            dark = provider!["isDarkMode"];
+          });
+        }
       });
     });
 
@@ -125,8 +164,20 @@ class ParticularCustomerState extends State<ParticularCustomer> {
           timePeriodData.containsKey("Lunch") ? timePeriodDoc["Lunch"] : 0;
       var currentDinner =
           timePeriodData.containsKey("Dinner") ? timePeriodDoc["Dinner"] : 0;
+      if (timePeriodData.containsKey("Lunch Extra Items")) {
+        List<dynamic> extraItems = timePeriodData["Lunch Extra Items"];
+        for (var item in extraItems) {
+          tempextraItemsCost += (item['price'] as num).toDouble();
+        }
+      }
+      if (timePeriodData.containsKey("Dinner Extra Items")) {
+        List<dynamic> extraItems = timePeriodData["Dinner Extra Items"];
+        for (var item in extraItems) {
+          tempextraItemsCost += (item['price'] as num).toDouble();
+        }
+      }
       setState(() {
-        tempAmount += currentDinner + currentLunch;
+        tempAmount += currentDinner + currentLunch + tempextraItemsCost;
       });
     }
 
@@ -145,8 +196,20 @@ class ParticularCustomerState extends State<ParticularCustomer> {
             timePeriodData.containsKey("Lunch") ? timePeriodDoc["Lunch"] : 0;
         var currentDinner =
             timePeriodData.containsKey("Dinner") ? timePeriodDoc["Dinner"] : 0;
+        if (timePeriodData.containsKey("Lunch Extra Items")) {
+          List<dynamic> extraItems = timePeriodData["Lunch Extra Items"];
+          for (var item in extraItems) {
+            extraItemsCost += (item['price'] as num).toDouble();
+          }
+        }
+        if (timePeriodData.containsKey("Dinner Extra Items")) {
+          List<dynamic> extraItems = timePeriodData["Dinner Extra Items"];
+          for (var item in extraItems) {
+            extraItemsCost += (item['price'] as num).toDouble();
+          }
+        }
         setState(() {
-          totalAmount += currentDinner + currentLunch;
+          totalAmount += currentDinner + currentLunch + extraItemsCost;
         });
       }
     }
@@ -165,20 +228,23 @@ class ParticularCustomerState extends State<ParticularCustomer> {
 
   Future<void> _refresh() async {
     await _fetchData();
+    await getCustomer();
   }
 
   @override
   Widget build(BuildContext context) {
     return isLoading
-        ? const Scaffold(
-            backgroundColor: white,
+        ?  Scaffold(
+            backgroundColor: dark? darkPrimary : white,
             body: Center(
               child: CircularProgressIndicator(
-                color: primaryDark,
+                color: dark? primaryColor : primaryDark,
               ),
             ),
           )
         : RefreshIndicator(
+            backgroundColor: primaryColor,
+            color: primaryDark,
             onRefresh: _refresh,
             child: Scaffold(
               bottomNavigationBar: Padding(
@@ -213,8 +279,11 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                     GestureDetector(
                       onTap: () async {
                         showAddTiffinToCustomerBottomSheet(
-                            context, widget.mobile);
-                        _refresh();
+                            context, widget.mobile, () async {
+                          Timer(Duration(seconds: 1), ()async{
+                            await getCustomer();
+                          });
+                        });
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 2 - 15,
@@ -239,7 +308,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                   ],
                 ),
               ),
-              backgroundColor: white,
+              backgroundColor: provider!["isDarkMode"]? darkPrimary : white,
               body: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
@@ -253,8 +322,9 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                         onTap: () {
                           Navigator.pop(context);
                         },
-                        child: const Icon(
+                        child:  Icon(
                           Icons.arrow_back_ios_new_rounded,
+                          color:  dark? white : darkPrimary,
                         ),
                       ),
                       const SizedBox(
@@ -268,9 +338,10 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                             Expanded(
                               child: Text(
                                 overflow: TextOverflow.ellipsis,
-                                customer!["Name"],
+                                customer?["Name"],
                                 style: GoogleFonts.manrope(
                                   textStyle: TextStyle(
+                                    color:  dark? white : darkPrimary,
                                     fontSize:
                                         MediaQuery.of(context).size.width *
                                             0.07,
@@ -307,6 +378,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                               customer!["Address"],
                               style: GoogleFonts.manrope(
                                 textStyle: TextStyle(
+                                  color:  dark? white : darkPrimary,
                                   fontSize:
                                       MediaQuery.of(context).size.width * 0.04,
                                 ),
@@ -322,6 +394,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                         widget.mobile,
                         style: GoogleFonts.manrope(
                           textStyle: TextStyle(
+                            color:  dark? white : darkPrimary,
                             fontSize: MediaQuery.of(context).size.width * 0.04,
                           ),
                         ),
@@ -342,6 +415,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                               "Total income: ",
                               style: GoogleFonts.manrope(
                                 textStyle: TextStyle(
+                                  color:  dark? white : darkPrimary,
                                   fontSize:
                                       MediaQuery.of(context).size.width * 0.05,
                                 ),
@@ -351,6 +425,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                               "₹$totalAmount",
                               style: GoogleFonts.manrope(
                                 textStyle: TextStyle(
+                                  color:  dark? white : darkPrimary,
                                   fontWeight: FontWeight.bold,
                                   fontSize:
                                       MediaQuery.of(context).size.width * 0.07,
@@ -370,6 +445,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                             "History",
                             style: GoogleFonts.manrope(
                               textStyle: TextStyle(
+                                color:  dark? white : darkPrimary,
                                 fontWeight: FontWeight.bold,
                                 fontSize:
                                     MediaQuery.of(context).size.width * 0.05,
@@ -379,11 +455,29 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                           const SizedBox(
                             width: 5,
                           ),
-                          GestureDetector(
-                            onTap: () async {
-                              await _refresh();
-                            },
-                            child: const Icon(Icons.history),
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () async {
+                                  await _refresh();
+                                },
+                                child: Icon(Icons.history, color:  dark? white : darkPrimary,),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              GestureDetector(
+                                onTap: () async {
+                                  showDeleteTiffinOfCustomerBottomSheet(
+                                      context, widget.mobile);
+                                  await getCustomer();
+                                },
+                                child: const Icon(
+                                  Icons.delete_rounded,
+                                  color: red,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -397,9 +491,9 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return const Center(
+                                return Center(
                                   child: CircularProgressIndicator(
-                                    color: primaryDark,
+                                    color:  dark? primaryColor : primaryDark,
                                   ),
                                 );
                               }
@@ -412,7 +506,10 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                               Map<String, List<Map<String, dynamic>>>
                                   groupedData = snapshot.data ?? {};
 
-                              return SizedBox(
+                              return Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
                                 // decoration: BoxDecoration(
                                 //   borderRadius: BorderRadius.circular(15),
                                 //   color: Colors.grey.withOpacity(0.3),
@@ -428,6 +525,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
 
                                     List<String> allColumns =
                                         _getAllColumns(monthData);
+                                    // fetchMonthlyIncome(monthKey);
 
                                     return ExpansionTile(
                                       textColor: primaryDark,
@@ -439,6 +537,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                                         "Total: ${monthData.length.toString()}",
                                         style: GoogleFonts.manrope(
                                           textStyle: TextStyle(
+                                            color:  dark? white : darkPrimary,
                                             fontSize: MediaQuery.of(context)
                                                     .size
                                                     .width *
@@ -448,12 +547,12 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                                       ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize
-                                            .min, // Ensure the row takes minimum space
+                                            .min,
                                         children: [
                                           IconButton(
-                                            icon: const Icon(
-                                              Icons.list_alt_rounded,
-                                              color: black,
+                                            icon: Icon(
+                                              Icons.download,
+                                              color:  dark? white : darkPrimary,
                                             ),
                                             onPressed: () async {
                                               _generateInvoiceForMonth(
@@ -467,6 +566,7 @@ class ParticularCustomerState extends State<ParticularCustomer> {
                                             DateTime.parse('$monthKey-01')),
                                         style: GoogleFonts.manrope(
                                           textStyle: TextStyle(
+                                            color:  dark? white : darkPrimary,
                                             fontSize: MediaQuery.of(context)
                                                     .size
                                                     .width *
@@ -572,9 +672,42 @@ class ParticularCustomerState extends State<ParticularCustomer> {
               style: GoogleFonts.manrope(),
             ),
           );
-        } else {
+        }  else if (column == 'Lunch Extra Items' || column == "Dinner Extra Items") {
+          // Handle Extra Items column
+          if (rowData.containsKey('Lunch Extra Items')) {
+            List<dynamic> extraItems = rowData['Lunch Extra Items'];
+            return DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: extraItems.map((extraItem) {
+                  return Text(
+                    "${extraItem['item']} (₹${extraItem['price']})",
+                    style: GoogleFonts.manrope(),
+                  );
+                }).toList(),
+              ),
+            );
+          } else if (rowData.containsKey('Dinner Extra Items')) {
+            List<dynamic> extraItems = rowData['Dinner Extra Items'];
+            return DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: extraItems.map((extraItem) {
+                  return Text(
+                    "${extraItem['item']} (₹${extraItem['price']})",
+                    style: GoogleFonts.manrope(),
+                  );
+                }).toList(),
+              ),
+            );
+          }
+          else {
+            return DataCell(Text('-', style: GoogleFonts.manrope()));
+          }
+        }
+        else {
           return DataCell(Text(
-            rowData[column]?.toString() ?? '-',
+            rowData[column] == null? "-" : rowData[column] == 0? "-" : rowData[column].toString() ?? '-',
             style: GoogleFonts.manrope(),
           ));
         }
@@ -608,6 +741,8 @@ class ParticularCustomerState extends State<ParticularCustomer> {
     final pdf = pw.Document();
     final Uint8List imageData = await getImageData('lib/assets/logo.png');
     double totalMonthlyAmount = 0;
+    double extraItemsCost = 0;
+
 
     User? user = FirebaseAuth.instance.currentUser;
     final timePeriodsSnapshot = await FirebaseFirestore.instance
@@ -630,8 +765,21 @@ class ParticularCustomerState extends State<ParticularCustomer> {
           timePeriodData.containsKey("Lunch") ? timePeriodData["Lunch"] : 0;
       var currentDinner =
           timePeriodData.containsKey("Dinner") ? timePeriodData["Dinner"] : 0;
+
+      if (timePeriodData.containsKey("Lunch Extra Items")) {
+        List<dynamic> extraItems = timePeriodData["Lunch Extra Items"];
+        for (var item in extraItems) {
+          extraItemsCost += (item['price'] as num).toDouble();
+        }
+      }
+      if (timePeriodData.containsKey("Dinner Extra Items")) {
+        List<dynamic> extraItems = timePeriodData["Dinner Extra Items"];
+        for (var item in extraItems) {
+          extraItemsCost += (item['price'] as num).toDouble();
+        }
+      }
       setState(() {
-        totalMonthlyAmount += currentDinner + currentLunch;
+        totalMonthlyAmount += currentDinner + currentLunch + extraItemsCost;
       });
     }
 
@@ -747,10 +895,39 @@ class ParticularCustomerState extends State<ParticularCustomer> {
       return columns.map((column) {
         if (column == 'Date') {
           return item['id'];
-        } else {
-          return rowData[column]?.toString() ?? '';
+        } else if (column == 'Lunch Extra Items' || column == "Dinner Extra Items") {
+          // Handle Extra Items column
+          if (rowData.containsKey('Lunch Extra Items')) {
+            List<dynamic> extraItems = rowData['Lunch Extra Items'];
+            return DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: extraItems.map((extraItem) {
+                  return Text(
+                    "${extraItem['item']} (₹${extraItem['price']})",
+                    style: GoogleFonts.manrope(),
+                  );
+                }).toList(),
+              ),
+            );
+          } else if (rowData.containsKey('Dinner Extra Items')) {
+            List<dynamic> extraItems = rowData['Dinner Extra Items'];
+            return DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: extraItems.map((extraItem) {
+                  return Text(
+                    "${extraItem['item']} (₹${extraItem['price']})",
+                    style: GoogleFonts.manrope(),
+                  );
+                }).toList(),
+              ),
+            );
+          }
+        else {
+          return rowData[column] == null? "-" :  rowData[column] == 0? "-" :  rowData[column].toString() ?? '-';
         }
-      }).toList();
+      }}).toList();
     }).toList();
   }
 }

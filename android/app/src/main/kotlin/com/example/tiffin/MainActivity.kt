@@ -1,4 +1,4 @@
-package com.example.tiffin
+package com.managementsystem.tiffinapp
 
 import io.flutter.embedding.android.FlutterActivity
 

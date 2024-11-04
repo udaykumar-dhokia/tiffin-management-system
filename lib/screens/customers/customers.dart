@@ -1,17 +1,21 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:tiffin/components/add_customer.dart';
-import 'package:tiffin/components/add_tiffin_to_customer.dart';
-import 'package:tiffin/components/edit_customer.dart';
+import 'package:tiffin/components/customer/add_customer.dart';
+import 'package:tiffin/components/customer/add_tiffin_to_customer.dart';
+import 'package:tiffin/components/customer/edit_customer.dart';
 import 'package:tiffin/constants/color.dart';
+import 'package:tiffin/screens/archived/archived.dart';
 import 'package:tiffin/screens/customers/particular.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Customers extends StatefulWidget {
-  const Customers({super.key});
+  ScrollController scrollController;
+  Customers({super.key, required this.scrollController});
 
   @override
   State<Customers> createState() => _CustomersState();
@@ -19,10 +23,14 @@ class Customers extends StatefulWidget {
 
 class _CustomersState extends State<Customers> {
   List<Map<String, dynamic>> customers = [];
+  Map<String, dynamic> provider = {};
+  bool dark = false;
+
   bool isLoading = false;
   List<Map<String, dynamic>> filteredCustomers = [];
   TextEditingController searchController = TextEditingController();
   String searchQuery = "";
+  bool isSearching = false;
 
   Future<void> getCustomer() async {
     setState(() {
@@ -33,6 +41,7 @@ class _CustomersState extends State<Customers> {
         .collection("providers")
         .doc(user!.email)
         .collection("Customers")
+        .where("isArchived", isEqualTo: false)
         .snapshots()
         .listen((snapshot) async {
       List<Map<String, dynamic>> tempCustomers = [];
@@ -49,6 +58,22 @@ class _CustomersState extends State<Customers> {
             .collection("TimePeriod")
             .get();
 
+        await FirebaseFirestore.instance
+            .collection("providers")
+            .doc(user.email)
+            .snapshots()
+            .listen((snapshot) {
+          setState(() {
+            provider = snapshot.data() as Map<String, dynamic>;
+
+            if (provider.containsKey("isDarkMode")) {
+              setState(() {
+                dark = provider["isDarkMode"];
+              });
+            }
+          });
+        });
+
         for (var timePeriodDoc in timePeriodsSnapshot.docs) {
           var timePeriodData = timePeriodDoc.data() as Map<String, dynamic>;
           var currentLunch =
@@ -56,11 +81,28 @@ class _CustomersState extends State<Customers> {
           var currentDinner = timePeriodData.containsKey("Dinner")
               ? timePeriodDoc["Dinner"]
               : 0;
-          totalAmount += currentDinner + currentLunch;
+
+          double extraItemsCost = 0;
+          if (timePeriodData.containsKey("Lunch Extra Items")) {
+            List<dynamic> extraItems = timePeriodData["Lunch Extra Items"];
+            for (var item in extraItems) {
+              extraItemsCost += (item['price'] as num).toDouble(); // Handle potential num type
+            }
+          }
+          if (timePeriodData.containsKey("Dinner Extra Items")) {
+            List<dynamic> extraItems = timePeriodData["Dinner Extra Items"];
+            for (var item in extraItems) {
+              extraItemsCost += (item['price'] as num).toDouble(); // Handle potential num type
+            }
+          }
+          totalAmount += currentDinner + currentLunch + extraItemsCost;
         }
 
+
         data['totalAmount'] = totalAmount;
-        tempCustomers.add(data);
+        if (data["isArchived"] == false) {
+          tempCustomers.add(data);
+        }
       }
 
       setState(() {
@@ -121,16 +163,16 @@ class _CustomersState extends State<Customers> {
   @override
   Widget build(BuildContext context) {
     return isLoading
-        ? const Scaffold(
-            backgroundColor: white,
+        ? Scaffold(
+            backgroundColor: dark ? darkPrimary : primaryColor,
             body: Center(
               child: CircularProgressIndicator(
-                color: primaryDark,
+                color: dark ? primaryColor : primaryDark,
               ),
             ),
           )
         : Scaffold(
-            backgroundColor: white,
+            backgroundColor: dark ? darkPrimary : white,
             floatingActionButton: FloatingActionButton(
               onPressed: () => showAddCustomerBottomSheet(context),
               backgroundColor: primaryDark,
@@ -139,12 +181,88 @@ class _CustomersState extends State<Customers> {
               tooltip: "New Customer",
               child: const Icon(Icons.add),
             ),
+            appBar: AppBar(
+              surfaceTintColor: white,
+              backgroundColor: dark ? darkPrimary : white,
+              toolbarHeight: 100,
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        // margin: const EdgeInsets.only(top: 30),
+                        child: Text(
+                          "Customers",
+                          style: GoogleFonts.manrope(
+                            textStyle: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: dark ? white : darkPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      customers.isEmpty
+                          ? Text(
+                              "Please add customers",
+                              style: GoogleFonts.manrope(),
+                            )
+                          : Container(
+                              child: Text(
+                                "Total (${filteredCustomers.length})",
+                                style: GoogleFonts.manrope(
+                                  textStyle: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: dark
+                                        ? white.withOpacity(0.5)
+                                        : darkPrimary.withOpacity(0.5),
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const Archived(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.archive_rounded,
+                            color: red,
+                          )),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            isSearching = !isSearching;
+                          });
+                        },
+                        icon: const Icon(Icons.search),
+                        color: dark ? white : darkPrimary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             body: SafeArea(
               child: RefreshIndicator(
                 backgroundColor: primaryColor,
                 color: primaryDark,
                 onRefresh: _refresh,
                 child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   child: Padding(
                     padding:
                         const EdgeInsets.only(left: 10, right: 10, top: 15),
@@ -152,107 +270,87 @@ class _CustomersState extends State<Customers> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 30),
-                          child: Text(
-                            "Customers",
-                            style: GoogleFonts.manrope(
-                              textStyle: TextStyle(
-                                fontSize:
-                                    MediaQuery.of(context).size.width * 0.09,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        customers.isEmpty
-                            ? Text(
-                                "Please add customers",
-                                style: GoogleFonts.manrope(),
-                              )
-                            : Container(
-                                child: Text(
-                                  "Total (${filteredCustomers.length})",
-                                  style: GoogleFonts.manrope(
-                                    textStyle: TextStyle(
-                                      color: black.withOpacity(0.5),
-                                      fontSize:
-                                          MediaQuery.of(context).size.width *
-                                              0.05,
-                                      fontWeight: FontWeight.bold,
+                        // const SizedBox(height: 20),
+                        if (customers.isNotEmpty)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 3),
+                            child: Wrap(
+                              children: [
+                                Visibility(
+                                  visible: isSearching,
+                                  child: TextFormField(
+                                    style: GoogleFonts.manrope(
+                                        textStyle: TextStyle(
+                                            color: dark ? white : darkPrimary)),
+                                    cursorColor: dark ? white : darkPrimary,
+                                    controller: searchController,
+                                    decoration: InputDecoration(
+                                      suffixIcon: const Icon(
+                                        Icons.search,
+                                        color: Colors.grey,
+                                      ),
+                                      label: Text(
+                                        "Search",
+                                        style: GoogleFonts.manrope(
+                                          textStyle: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.04,
+                                          ),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                            color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        if (customers.isNotEmpty)
-                          TextFormField(
-                            cursorColor: black,
-                            controller: searchController,
-                            decoration: InputDecoration(
-                              suffixIcon: const Icon(
-                                Icons.search,
-                                color: Colors.grey,
-                              ),
-                              label: Text(
-                                "Search",
-                                style: GoogleFonts.manrope(
-                                  textStyle: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize:
-                                        MediaQuery.of(context).size.width *
-                                            0.04,
-                                  ),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide:
-                                    const BorderSide(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
+                              ],
                             ),
                           ),
-                        const SizedBox(
-                          height: 5,
-                        ),
+                        const SizedBox(height: 5),
                         if (customers.isNotEmpty)
                           Text(
                             "*Swipe from left to right for more options.",
                             style: GoogleFonts.manrope(
-                              textStyle: const TextStyle(
-                                color: Colors.grey,
+                              textStyle: TextStyle(
+                                color: dark ? white : Colors.grey,
                               ),
                             ),
                           ),
-                        const SizedBox(
-                          height: 10,
-                        ),
+                        const SizedBox(height: 10),
                         Container(
-                          padding: const EdgeInsets.only(bottom: 50),
-                          height: MediaQuery.of(context).size.height / 1.5,
-                          child: ListView.builder(
-                            itemCount: filteredCustomers.length,
-                            itemBuilder: (context, item) {
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ParticularCustomer(
-                                        mobile: filteredCustomers[item]
-                                            ["Mobile"],
+                          // height: MediaQuery.of(context).size.height - kBottomNavigationBarHeight*4,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 0),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              controller: widget.scrollController,
+                              itemCount: filteredCustomers.length,
+                              itemBuilder: (context, item) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ParticularCustomer(
+                                          mobile: filteredCustomers[item]
+                                              ["Mobile"],
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                                child: Slidable(
-                                  key: const ValueKey(0),
-                                  startActionPane: ActionPane(
+                                    );
+                                  },
+                                  child: Slidable(
+                                    key: const ValueKey(0),
+                                    startActionPane: ActionPane(
                                       motion: const ScrollMotion(),
                                       children: [
                                         SlidableAction(
@@ -268,81 +366,80 @@ class _CustomersState extends State<Customers> {
                                           icon: Icons.call,
                                           label: 'Call',
                                         ),
-                                      ]),
-                                  child: Card(
-                                    color: primaryColor,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: Column(
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    filteredCustomers[item]
-                                                        ["Name"],
-                                                    style: GoogleFonts.manrope(
-                                                      textStyle: TextStyle(
-                                                        fontSize: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.05,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                  SizedBox(
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.5,
-                                                    child: Text(
-                                                      'Mobile: ${filteredCustomers[item]["Mobile"]}',
+                                        SlidableAction(
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          autoClose: true,
+                                          onPressed: (context) async {
+                                            User? user = FirebaseAuth
+                                                .instance.currentUser;
+                                            await FirebaseFirestore.instance
+                                                .collection("providers")
+                                                .doc(user!.email)
+                                                .collection("Customers")
+                                                .doc(filteredCustomers[item]
+                                                        ["Mobile"]
+                                                    .toString())
+                                                .update({"isArchived": true});
+                                          },
+                                          backgroundColor: Colors.red,
+                                          foregroundColor: Colors.white,
+                                          icon: Icons.archive_rounded,
+                                          label: 'Archived',
+                                        ),
+                                      ],
+                                    ),
+                                    child: Card(
+                                      color: primaryColor,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      filteredCustomers[item]
+                                                          ["Name"],
                                                       style:
-                                                          GoogleFonts.manrope(),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                  Text(
-                                                    'Meal Type: ${filteredCustomers[item]["MealType"] == "Both" ? 'Lunch & Dinner' : filteredCustomers[item]["MealType"]}',
-                                                    style: GoogleFonts.manrope(
-                                                      textStyle: TextStyle(
-                                                        fontSize: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.035,
+                                                          GoogleFonts.manrope(
+                                                        textStyle: TextStyle(
+                                                          fontSize: MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .width *
+                                                              0.05,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                  SizedBox(
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.5,
-                                                    child: Text(
-                                                      '${filteredCustomers[item]["Address"]}',
+                                                    const SizedBox(height: 10),
+                                                    SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.5,
+                                                      child: Text(
+                                                        'Mobile: ${filteredCustomers[item]["Mobile"]}',
+                                                        style: GoogleFonts
+                                                            .manrope(),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 5),
+                                                    Text(
+                                                      'Meal Type: ${filteredCustomers[item]["MealType"] == "Both" ? 'Lunch & Dinner' : filteredCustomers[item]["MealType"]}',
                                                       style:
                                                           GoogleFonts.manrope(
                                                         textStyle: TextStyle(
@@ -353,160 +450,184 @@ class _CustomersState extends State<Customers> {
                                                               0.035,
                                                         ),
                                                       ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                  filteredCustomers[item]
-                                                              ["Address 2"] ==
-                                                          ""
-                                                      ? Container()
-                                                      : SizedBox(
-                                                          width: MediaQuery.of(
-                                                                      context)
+                                                    const SizedBox(height: 5),
+                                                    SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
                                                                   .size
                                                                   .width *
                                                               0.5,
-                                                          child: Text(
-                                                            filteredCustomers[
-                                                                            item]
-                                                                        [
-                                                                        "Address 2"] ==
-                                                                    ""
-                                                                ? ""
-                                                                : 'Address 2: ${filteredCustomers[item]["Address 2"]}',
-                                                            style: GoogleFonts
-                                                                .manrope(
-                                                              textStyle:
-                                                                  TextStyle(
-                                                                fontSize: MediaQuery.of(
-                                                                            context)
-                                                                        .size
-                                                                        .width *
-                                                                    0.035,
+                                                      child: Text(
+                                                        '${filteredCustomers[item]["Address"]}',
+                                                        style:
+                                                            GoogleFonts.manrope(
+                                                          textStyle: TextStyle(
+                                                            fontSize: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.035,
+                                                          ),
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 5),
+                                                    filteredCustomers[item]
+                                                                ["Address 2"] ==
+                                                            ""
+                                                        ? Container()
+                                                        : SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.5,
+                                                            child: Text(
+                                                              filteredCustomers[
+                                                                              item]
+                                                                          [
+                                                                          "Address 2"] ==
+                                                                      ""
+                                                                  ? ""
+                                                                  : 'Address 2: ${filteredCustomers[item]["Address 2"]}',
+                                                              style: GoogleFonts
+                                                                  .manrope(
+                                                                textStyle:
+                                                                    TextStyle(
+                                                                  fontSize: MediaQuery.of(
+                                                                              context)
+                                                                          .size
+                                                                          .width *
+                                                                      0.035,
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      '₹${(filteredCustomers[item]['totalAmount'])}',
+                                                      style:
+                                                          GoogleFonts.manrope(
+                                                        textStyle: TextStyle(
+                                                          fontSize: MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .width *
+                                                              0.06,
+                                                          fontWeight:
+                                                              FontWeight.bold,
                                                         ),
-                                                ],
-                                              ),
-                                              Row(
-                                                children: [
-                                                  Text(
-                                                    '₹${(filteredCustomers[item]['totalAmount'])}',
-                                                    style: GoogleFonts.manrope(
-                                                      textStyle: TextStyle(
-                                                        fontSize: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.06,
-                                                        fontWeight:
-                                                            FontWeight.bold,
                                                       ),
                                                     ),
-                                                  ),
-                                                  // const SizedBox(
-                                                  //   width: 15,
-                                                  // ),
-                                                  // const Icon(Icons.edit),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(
-                                            height: 15,
-                                          ),
-                                          Row(
-                                            children: [
-                                              GestureDetector(
-                                                onTap: () {
-                                                  showEditCustomerBottomSheet(
-                                                    context,
-                                                    filteredCustomers[item]
-                                                        ["id"],
-                                                  );
-                                                },
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.all(10),
-                                                  width: (MediaQuery.of(context)
-                                                              .size
-                                                              .width) /
-                                                          2 -
-                                                      30,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
-                                                    color: primaryDark,
-                                                  ),
-                                                  child: Center(
-                                                      child: Text(
-                                                    "View & Edit",
-                                                    style: GoogleFonts.manrope(
-                                                      textStyle:
-                                                          const TextStyle(
-                                                        color: white,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  )),
+                                                  ],
                                                 ),
-                                              ),
-                                              const SizedBox(
-                                                width: 10,
-                                              ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  showAddTiffinToCustomerBottomSheet(
-                                                    context,
-                                                    filteredCustomers[item]
-                                                        ["id"],
-                                                  );
-                                                  _refresh();
-                                                },
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.all(10),
-                                                  width: (MediaQuery.of(context)
-                                                              .size
-                                                              .width) /
-                                                          2 -
-                                                      30,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
-                                                    color: Colors.green,
-                                                  ),
-                                                  child: Center(
-                                                      child: Text(
-                                                    "Add tiffin",
-                                                    style: GoogleFonts.manrope(
-                                                      textStyle:
-                                                          const TextStyle(
-                                                        color: white,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 15),
+                                            Row(
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    showEditCustomerBottomSheet(
+                                                      context,
+                                                      filteredCustomers[item]
+                                                          ["id"],
+                                                    );
+                                                  },
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            10),
+                                                    width:
+                                                        (MediaQuery.of(context)
+                                                                    .size
+                                                                    .width) /
+                                                                2 -
+                                                            30,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      color: primaryDark,
                                                     ),
-                                                  )),
+                                                    child: Center(
+                                                        child: Text(
+                                                      "View & Edit",
+                                                      style:
+                                                          GoogleFonts.manrope(
+                                                        textStyle:
+                                                            const TextStyle(
+                                                          color: white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    )),
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
-                                          )
-                                        ],
+                                                const SizedBox(width: 10),
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    showAddTiffinToCustomerBottomSheet(
+                                                        context,
+                                                        filteredCustomers[item]
+                                                            ["id"], () async {
+                                                      Timer(
+                                                          const Duration(
+                                                              seconds: 1),
+                                                          () async {
+                                                        await getCustomer();
+                                                      });
+                                                    });
+                                                    // _refresh();
+                                                  },
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            10),
+                                                    width:
+                                                        (MediaQuery.of(context)
+                                                                    .size
+                                                                    .width) /
+                                                                2 -
+                                                            30,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      color: Colors.green,
+                                                    ),
+                                                    child: Center(
+                                                        child: Text(
+                                                      "Add tiffin",
+                                                      style:
+                                                          GoogleFonts.manrope(
+                                                        textStyle:
+                                                            const TextStyle(
+                                                          color: white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    )),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ],

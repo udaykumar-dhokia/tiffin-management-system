@@ -41,48 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC5WkxZ_mQxI0NkfJGvi6CIzbgDYFnwO4s',
-    appId: '1:847192235087:web:4cf009c37314cd297c5e3a',
-    messagingSenderId: '847192235087',
-    projectId: 'tiffin-4e196',
-    authDomain: 'tiffin-4e196.firebaseapp.com',
-    storageBucket: 'tiffin-4e196.appspot.com',
-    measurementId: 'G-7S2EWGRPZR',
+    apiKey: 'AIzaSyCT4zbGaGHzpKK9BXD-I0DG4vok61j6uFk',
+    appId: '1:837197401665:web:9c68387131695a2458c0c0',
+    messagingSenderId: '837197401665',
+    projectId: 'tiffin-dd53d',
+    authDomain: 'tiffin-dd53d.firebaseapp.com',
+    storageBucket: 'tiffin-dd53d.appspot.com',
+    measurementId: 'G-G8FN17Y7ES',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAXdsQ_PWGtyMw0TdyhSoSlYISi_CzY_9w',
-    appId: '1:847192235087:android:6c4e31fc8d09a11b7c5e3a',
-    messagingSenderId: '847192235087',
-    projectId: 'tiffin-4e196',
-    storageBucket: 'tiffin-4e196.appspot.com',
+    apiKey: 'AIzaSyCCea8tl_l4ijtDEM5_hBp0yWKNUoe7Opg',
+    appId: '1:837197401665:android:1740d26cfbcf6a3458c0c0',
+    messagingSenderId: '837197401665',
+    projectId: 'tiffin-dd53d',
+    storageBucket: 'tiffin-dd53d.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDenwk5SzTCsg3CuzI3DslPUmjfV58LLaE',
-    appId: '1:847192235087:ios:cd624aced5852d537c5e3a',
-    messagingSenderId: '847192235087',
-    projectId: 'tiffin-4e196',
-    storageBucket: 'tiffin-4e196.appspot.com',
+    apiKey: 'AIzaSyCXitdIP9930VWCzbMCPkju2dY36I8WMUw',
+    appId: '1:837197401665:ios:ecda0f778cb6186a58c0c0',
+    messagingSenderId: '837197401665',
+    projectId: 'tiffin-dd53d',
+    storageBucket: 'tiffin-dd53d.appspot.com',
     iosBundleId: 'com.example.tiffin',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDenwk5SzTCsg3CuzI3DslPUmjfV58LLaE',
-    appId: '1:847192235087:ios:cd624aced5852d537c5e3a',
-    messagingSenderId: '847192235087',
-    projectId: 'tiffin-4e196',
-    storageBucket: 'tiffin-4e196.appspot.com',
+    apiKey: 'AIzaSyCXitdIP9930VWCzbMCPkju2dY36I8WMUw',
+    appId: '1:837197401665:ios:ecda0f778cb6186a58c0c0',
+    messagingSenderId: '837197401665',
+    projectId: 'tiffin-dd53d',
+    storageBucket: 'tiffin-dd53d.appspot.com',
     iosBundleId: 'com.example.tiffin',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyC5WkxZ_mQxI0NkfJGvi6CIzbgDYFnwO4s',
-    appId: '1:847192235087:web:f5f19b19de94956c7c5e3a',
-    messagingSenderId: '847192235087',
-    projectId: 'tiffin-4e196',
-    authDomain: 'tiffin-4e196.firebaseapp.com',
-    storageBucket: 'tiffin-4e196.appspot.com',
-    measurementId: 'G-SFSFDBX5EE',
+    apiKey: 'AIzaSyCT4zbGaGHzpKK9BXD-I0DG4vok61j6uFk',
+    appId: '1:837197401665:web:5fbcaa7e2263fbf258c0c0',
+    messagingSenderId: '837197401665',
+    projectId: 'tiffin-dd53d',
+    authDomain: 'tiffin-dd53d.firebaseapp.com',
+    storageBucket: 'tiffin-dd53d.appspot.com',
+    measurementId: 'G-F67JQBGFDX',
   );
 }
